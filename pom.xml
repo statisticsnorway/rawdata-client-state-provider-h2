@@ -4,7 +4,7 @@
 
     <groupId>no.ssb.rawdata</groupId>
     <artifactId>rawdata-state-provider-h2</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
 
     <name>Rawdata State Provider H2 Database</name>
