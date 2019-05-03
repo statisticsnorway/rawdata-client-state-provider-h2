@@ -94,7 +94,7 @@ public class H2StatePersistence implements StatePersistence {
         return Maybe.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(true)) {
                 try {
-                    String sql = FileAndClasspathReaderUtils.getResourceAsString("h2/first-position.sql", StandardCharsets.UTF_8);
+                    String sql = FileAndClasspathReaderUtils.readFileOrClasspathResource("h2/first-position.sql");
                     PreparedStatement ps = tx.connection.prepareStatement(sql);
                     ps.setString(1, namespace);
                     ps.setString(2, namespace);
@@ -118,7 +118,7 @@ public class H2StatePersistence implements StatePersistence {
         return Maybe.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(true)) {
                 try {
-                    String sql = FileAndClasspathReaderUtils.getResourceAsString("h2/last-position.sql", StandardCharsets.UTF_8);
+                    String sql = FileAndClasspathReaderUtils.readFileOrClasspathResource("h2/last-position.sql");
                     PreparedStatement ps = tx.connection.prepareStatement(sql);
                     ps.setString(1, namespace);
                     ps.setString(2, namespace);
@@ -142,7 +142,7 @@ public class H2StatePersistence implements StatePersistence {
         return Maybe.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(true)) {
                 try {
-                    String sql = FileAndClasspathReaderUtils.getResourceAsString("h2/next-position.sql", StandardCharsets.UTF_8);
+                    String sql = FileAndClasspathReaderUtils.readFileOrClasspathResource("h2/next-position.sql");
                     PreparedStatement ps = tx.connection.prepareStatement(sql);
                     ps.setString(1, namespace);
                     ps.setString(2, namespace);
@@ -165,7 +165,7 @@ public class H2StatePersistence implements StatePersistence {
         final H2Transaction transaction = transactionFactory.createTransaction(true);
         return Single.fromCallable(() -> {
             try {
-                String sql = FileAndClasspathReaderUtils.getResourceAsString("h2/find-positions.sql", StandardCharsets.UTF_8);
+                String sql = FileAndClasspathReaderUtils.readFileOrClasspathResource("h2/find-positions.sql");
                 PreparedStatement ps = transaction.connection.prepareStatement(sql);
                 ps.setString(1, namespace);
                 ps.setString(2, namespace);
