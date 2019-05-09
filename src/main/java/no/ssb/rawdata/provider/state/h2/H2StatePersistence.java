@@ -159,6 +159,28 @@ public class H2StatePersistence implements StatePersistence {
         });
     }
 
+    @Override
+    public Maybe<String> getOffsetPosition(String namespace, String fromPosition, int offset) {
+        return Maybe.fromCallable(() -> {
+            try (H2Transaction tx = transactionFactory.createTransaction(true)) {
+                try {
+                    String sql = FileAndClasspathReaderUtils.getResourceAsString("h2/offset-position.sql", StandardCharsets.UTF_8);
+                    PreparedStatement ps = tx.connection.prepareStatement(sql);
+                    ps.setString(1, namespace);
+                    ps.setString(2, namespace);
+                    ps.setString(3, namespace);
+                    ResultSet rs = ps.executeQuery();
+                    if (rs.next()) {
+                        return rs.getString(2);
+                    }
+                    return null;
+                } catch (SQLException e) {
+                    throw new PersistenceException(e);
+                }
+            }
+        });
+    }
+
 
     @Override
     public Flowable<CompletedPosition> readPositions(String namespace, String fromPosition, String toPosition) {
