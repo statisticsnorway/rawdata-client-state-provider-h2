@@ -164,7 +164,7 @@ public class H2StatePersistence implements StatePersistence {
         return Maybe.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(true)) {
                 try {
-                    String sql = FileAndClasspathReaderUtils.getResourceAsString("h2/offset-position.sql", StandardCharsets.UTF_8);
+                    String sql = FileAndClasspathReaderUtils.readFileOrClasspathResource("h2/offset-position.sql");
                     PreparedStatement ps = tx.connection.prepareStatement(sql);
                     ps.setString(1, namespace);
                     ps.setString(2, namespace);
