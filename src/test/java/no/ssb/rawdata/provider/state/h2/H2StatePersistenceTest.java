@@ -76,6 +76,7 @@ public class H2StatePersistenceTest {
         assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("a", "b")).blockingGet());
         assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "c");
         assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "b");
+        assertEquals(stateProvider.getOffsetPosition("ns", "a", 1).blockingGet(), "b");
 
         assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("g", "h", "i", "j")).blockingGet());
         assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "c");
@@ -116,6 +117,8 @@ public class H2StatePersistenceTest {
                 onError -> onError.printStackTrace(),
                 () -> assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "t")
         );
+
+        assertEquals(stateProvider.getOffsetPosition("ns", "a", 2).blockingGet(), "b");
     }
 
 }
