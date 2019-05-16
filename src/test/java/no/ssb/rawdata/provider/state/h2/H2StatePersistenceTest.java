@@ -19,7 +19,6 @@ import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class H2StatePersistenceTest {
@@ -51,74 +50,42 @@ public class H2StatePersistenceTest {
 
     @Test(enabled = false)
     public void testName() throws InterruptedException {
-        stateProvider.expectedPagePositions("ns", LinkedSet.of("a", "b", "c", "d", "e")).blockingGet();
-        stateProvider.expectedPagePositions("ns", LinkedSet.of("f", "g", "h", "i", "j")).blockingGet();
-        stateProvider.expectedPagePositions("ns", LinkedSet.of("k", "l", "m", "n", "o")).blockingGet();
-
         stateProvider.trackCompletedPositions("ns", LinkedSet.of("a", "b")).blockingGet();
-//        stateProvider.trackCompletedPositions("ns", LinkedSet.of("b", "c")).blockingGet();
-//        stateProvider.trackCompletedPositions("ns", LinkedSet.of("a", "b", "c", "d", "e")).blockingGet();
-        stateProvider.trackCompletedPositions("ns", LinkedSet.of("g", "h")).blockingGet();
-        stateProvider.trackCompletedPositions("ns", LinkedSet.of("k", "l")).blockingGet();
+        stateProvider.setNextPosition("ns", "c").blockingGet();
+        System.out.printf("next: %s%n", stateProvider.getNextPosition("ns").blockingGet());
 
-        System.out.printf("%s%n", stateProvider.getFirstPosition("ns").blockingGet());
-        System.out.printf("%s%n", stateProvider.getNextPosition("ns").blockingGet());
-        stateProvider.readPositions("ns", "a", "c").subscribe(onNext -> System.out.printf("%s%n", onNext.position), onError -> onError.printStackTrace());
+        stateProvider.trackCompletedPositions("ns", LinkedSet.of("c", "d", "e", "f", "g", "h")).blockingGet();
+        stateProvider.setNextPosition("ns", "i").blockingGet();
+
+        System.out.printf("first: %s%n", stateProvider.getFirstPosition("ns").blockingGet());
+        System.out.printf("last: %s%n", stateProvider.getLastPosition("ns").blockingGet());
+        System.out.printf("next: %s%n", stateProvider.getNextPosition("ns").blockingGet());
+
+        System.out.printf("offset: %s%n", stateProvider.getOffsetPosition("ns", "b", 3).blockingGet());
+
+        stateProvider.readPositions("ns", "b", "e").subscribe(onNext -> System.out.printf("%s%n", onNext.position), onError -> onError.printStackTrace());
 
         Thread.sleep(250);
     }
 
     @Test //(enabled = false)
     public void testTx() {
-        assertTrue(stateProvider.expectedPagePositions("ns", LinkedSet.of("a", "b", "c", "d", "e")).blockingGet());
-        assertTrue(stateProvider.expectedPagePositions("ns", LinkedSet.of("f", "g", "h", "i", "j")).blockingGet());
-
         assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("a", "b")).blockingGet());
-        assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "c");
+        stateProvider.setNextPosition("ns", "c").blockingGet();
         assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "b");
-//        assertEquals(stateProvider.getOffsetPosition("ns", "a", 1).blockingGet(), "b");
-
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("g", "h", "i", "j")).blockingGet());
         assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "c");
-        assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "b");
+        assertEquals(stateProvider.getOffsetPosition("ns", "a", 1).blockingGet(), "b");
 
-        assertTrue(stateProvider.expectedPagePositions("ns", LinkedSet.of("c", "d", "e", "f", "g")).blockingGet());
         assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("c", "d", "e")).blockingGet());
-        assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "f");
+        stateProvider.setNextPosition("ns", "f").blockingGet();
         assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "e");
-
-        assertTrue(stateProvider.expectedPagePositions("ns", LinkedSet.of("k", "l", "m", "n", "o")).blockingGet());
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("l", "m", "n")).blockingGet());
-
         assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "f");
-        assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "e");
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("f")).blockingGet());
-        assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "k");
-        assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "j");
+        assertEquals(stateProvider.getOffsetPosition("ns", "c", 3).blockingGet(), "e");
 
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("k", "o")).blockingGet());
-        assertNull(stateProvider.getNextPosition("ns").blockingGet());
-        assertNotNull(stateProvider.getLastPosition("ns").blockingGet());
-
-        assertTrue(stateProvider.expectedPagePositions("ns", LinkedSet.of("p", "q", "r", "s", "t")).blockingGet());
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("q")).blockingGet());
-        assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "p");
-        assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "o");
-
-
-        Flowable<CompletedPosition> flowable = stateProvider.readPositions("ns", "b", "m");
-        List<String> expected = new ArrayList<>(List.of("b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"));
+        Flowable<CompletedPosition> flowable = stateProvider.readPositions("ns", "b", "e");
+        List<String> expected = new ArrayList<>(List.of("b", "c", "d", "e"));
         flowable.subscribe(onNext -> expected.remove(onNext.position), onError -> onError.printStackTrace());
         assertTrue(expected.isEmpty());
-
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("p", "r", "s", "t")).blockingGet());
-        stateProvider.readPositions("ns", "a", "t").subscribe(
-                onNext -> System.out.printf("%s%n", onNext),
-                onError -> onError.printStackTrace(),
-                () -> assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "t")
-        );
-
-//        assertEquals(stateProvider.getOffsetPosition("ns", "a", 2).blockingGet(), "b");
     }
 
 }
