@@ -14,7 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Set;
+import java.util.List;
 
 public class H2StatePersistence implements StatePersistence {
 
@@ -34,7 +34,7 @@ public class H2StatePersistence implements StatePersistence {
     }
 
     @Override
-    public Single<Boolean> trackCompletedPositions(String namespace, Set<String> completedPositions) {
+    public Single<Boolean> trackCompletedPositions(String namespace, List<String> completedPositions) {
         return Single.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(false)) {
                 try {

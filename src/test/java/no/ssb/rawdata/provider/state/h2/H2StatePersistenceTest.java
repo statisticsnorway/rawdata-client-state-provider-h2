@@ -4,7 +4,6 @@ import io.reactivex.Flowable;
 import no.ssb.config.DynamicConfiguration;
 import no.ssb.config.StoreBasedDynamicConfiguration;
 import no.ssb.rawdata.api.state.CompletedPosition;
-import no.ssb.rawdata.api.state.LinkedSet;
 import no.ssb.rawdata.api.state.StatePersistenceInitializer;
 import no.ssb.service.provider.api.ProviderConfigurator;
 import org.slf4j.Logger;
@@ -50,11 +49,11 @@ public class H2StatePersistenceTest {
 
     @Test(enabled = false)
     public void testName() throws InterruptedException {
-        stateProvider.trackCompletedPositions("ns", LinkedSet.of("a", "b")).blockingGet();
+        stateProvider.trackCompletedPositions("ns", List.of("a", "b")).blockingGet();
         stateProvider.setNextPosition("ns", "c").blockingGet();
         System.out.printf("next: %s%n", stateProvider.getNextPosition("ns").blockingGet());
 
-        stateProvider.trackCompletedPositions("ns", LinkedSet.of("c", "d", "e", "f", "g", "h")).blockingGet();
+        stateProvider.trackCompletedPositions("ns", List.of("c", "d", "e", "f", "g", "h")).blockingGet();
         stateProvider.setNextPosition("ns", "i").blockingGet();
 
         System.out.printf("first: %s%n", stateProvider.getFirstPosition("ns").blockingGet());
@@ -70,13 +69,13 @@ public class H2StatePersistenceTest {
 
     @Test //(enabled = false)
     public void testTx() {
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("a", "b")).blockingGet());
+        assertTrue(stateProvider.trackCompletedPositions("ns", List.of("a", "b")).blockingGet());
         stateProvider.setNextPosition("ns", "c").blockingGet();
         assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "b");
         assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "c");
         assertEquals(stateProvider.getOffsetPosition("ns", "a", 1).blockingGet(), "b");
 
-        assertTrue(stateProvider.trackCompletedPositions("ns", LinkedSet.of("c", "d", "e")).blockingGet());
+        assertTrue(stateProvider.trackCompletedPositions("ns", List.of("c", "d", "e")).blockingGet());
         stateProvider.setNextPosition("ns", "f").blockingGet();
         assertEquals(stateProvider.getLastPosition("ns").blockingGet(), "e");
         assertEquals(stateProvider.getNextPosition("ns").blockingGet(), "f");
