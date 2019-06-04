@@ -93,68 +93,18 @@ public class H2StatePersistence implements StatePersistence {
     }
 
     @Override
-    public Single<Boolean> setNextPosition(String namespace, String nextPosition) {
-        return Single.fromCallable(() -> {
-            try (H2Transaction tx = transactionFactory.createTransaction(false)) {
-                try {
-                    PreparedStatement select = tx.connection.prepareStatement("SELECT count(*) FROM next_position WHERE namespace=?");
-                    select.setString(1, namespace);
-                    ResultSet selectResultSet = select.executeQuery();
-
-                    if (selectResultSet.next() && selectResultSet.getInt(1) > 0) {
-                        PreparedStatement update = tx.connection.prepareStatement("UPDATE next_position SET opaque_id = ? WHERE namespace = ?");
-                        update.setString(1, nextPosition);
-                        update.setString(2, namespace);
-                        return update.executeUpdate() == 1;
-
-                    } else {
-                        PreparedStatement insert = tx.connection.prepareStatement("INSERT INTO next_position (namespace, opaque_id) VALUES (?, ?)");
-                        insert.setString(1, namespace);
-                        insert.setString(2, nextPosition);
-                        return insert.executeUpdate() == 1;
-
-                    }
-                } catch (SQLException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-        });
-    }
-
-    @Override
-    public Maybe<String> getNextPosition(String namespace) {
-        return Maybe.fromCallable(() -> {
-            try (H2Transaction tx = transactionFactory.createTransaction(true)) {
-                try {
-                    PreparedStatement select = tx.connection.prepareStatement("SELECT opaque_id FROM next_position WHERE namespace = ?");
-                    select.setString(1, namespace);
-
-                    ResultSet selectResultSet = select.executeQuery();
-                    if (selectResultSet.next()) {
-                        return selectResultSet.getString(1);
-                    }
-                    return null;
-
-                } catch (SQLException e) {
-                    throw new PersistenceException(e);
-                }
-            }
-        });
-    }
-
-    @Override
     public Maybe<String> getOffsetPosition(String namespace, String fromPosition, int offset) {
         return Maybe.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(true)) {
                 try {
-                    PreparedStatement ps = tx.connection.prepareStatement("SELECT opaque_id FROM completed_positions WHERE namespace = ? AND id > (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) ORDER BY id LIMIT ?");
+                    PreparedStatement ps = tx.connection.prepareStatement("SELECT DISTINCT id, opaque_id FROM completed_positions WHERE namespace = ? AND id > (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) ORDER BY id LIMIT ?");
                     ps.setString(1, namespace);
                     ps.setString(2, namespace);
                     ps.setString(3, fromPosition);
                     ps.setInt(4, offset);
                     ResultSet rs = ps.executeQuery();
                     if (rs.last()) {
-                        return rs.getString(1);
+                        return rs.getString(2);
                     }
                     return null;
                 } catch (SQLException e) {
@@ -170,7 +120,7 @@ public class H2StatePersistence implements StatePersistence {
         final H2Transaction tx = transactionFactory.createTransaction(true);
         return Single.fromCallable(() -> {
             try {
-                PreparedStatement ps = tx.connection.prepareStatement("SELECT opaque_id FROM completed_positions WHERE namespace = ? AND id >= (SELECT id FROM completed_positions                 WHERE namespace = ? AND opaque_id = ?) AND id <= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) ORDER BY id");
+                PreparedStatement ps = tx.connection.prepareStatement("SELECT id, opaque_id FROM completed_positions WHERE namespace = ? AND id >= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) AND id <= (SELECT id FROM completed_positions WHERE namespace = ? AND opaque_id = ?) ORDER BY id");
                 ps.setString(1, namespace);
                 ps.setString(2, namespace);
                 ps.setString(3, fromPosition);
@@ -179,7 +129,7 @@ public class H2StatePersistence implements StatePersistence {
                 ResultSet resultSet = ps.executeQuery();
                 Deque<CompletedPosition> result = new LinkedList<>();
                 while (resultSet.next()) {
-                    String position = resultSet.getString(1);
+                    String position = resultSet.getString(2);
                     result.add(new CompletedPosition(namespace, position));
                 }
                 return result;
