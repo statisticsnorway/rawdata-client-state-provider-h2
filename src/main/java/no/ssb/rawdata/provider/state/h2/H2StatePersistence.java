@@ -13,7 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,7 +45,7 @@ public class H2StatePersistence implements StatePersistence {
                     for (String completedPosition : completedPositions) {
                         ps.setString(1, namespace);
                         ps.setString(2, completedPosition);
-                        ps.setTimestamp(3, Timestamp.from(Instant.now()));
+                        ps.setTimestamp(3, Timestamp.from(ZonedDateTime.now().toInstant()));
                         ps.addBatch();
                         n++;
                     }
