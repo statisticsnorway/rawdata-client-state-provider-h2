@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,11 +40,12 @@ public class H2StatePersistence implements StatePersistence {
         return Single.fromCallable(() -> {
             try (H2Transaction tx = transactionFactory.createTransaction(false)) {
                 try {
-                    PreparedStatement ps = tx.connection.prepareStatement("INSERT INTO completed_positions (namespace, opaque_id) VALUES (?, ?)");
+                    PreparedStatement ps = tx.connection.prepareStatement("INSERT INTO completed_positions (namespace, opaque_id, ts) VALUES (?, ?, ?)");
                     int n = 1;
                     for (String completedPosition : completedPositions) {
                         ps.setString(1, namespace);
                         ps.setString(2, completedPosition);
+                        ps.setTimestamp(3, Timestamp.from(Instant.now()));
                         ps.addBatch();
                         n++;
                     }
