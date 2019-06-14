@@ -4,7 +4,7 @@
 
     <groupId>no.ssb.rawdata</groupId>
     <artifactId>rawdata-client-state-provider-h2</artifactId>
-    <version>0.4</version>
+    <version>0.5-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Rawdata Client State Provider H2 Database</name>
@@ -42,7 +42,7 @@
         <connection>scm:git:git://github.com/statisticsnorway/rawdata-client-state-provider-h2.git</connection>
         <developerConnection>scm:git:git@github.com:statisticsnorway/rawdata-client-state-provider-h2.git</developerConnection>
         <url>https://github.com/statisticsnorway/rawdata-client-state-provider-h2/tree/master</url>
-        <tag>v0.4</tag>
+        <tag>v0.1</tag>
     </scm>
 
     <distributionManagement>
